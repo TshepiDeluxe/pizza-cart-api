@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Cart</title>
+    <link rel="stylesheet" href="simple-grid.css">
+    <link rel="stylesheet" href="style.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="functions.js"></script>
+    <script src="accordion.js"></script>
+    <script src="pizzaCartAPI.js"></script>
+    <script>
+        // axios
+        //         .get(`https://pizza-cart-api.herokuapp.com/api/pizzas`)
+        //         .then((result) => {
+        //             console.log(result.data);
+        //         })
+        //var pizzas = [{"id":5,"size":"large","type":"meaty","flavour":"Regina","price":"106.99","featured":false},{"id":2,"size":"large","type":"veggie","flavour":"Garlic & Mushroom","price":"87.99","featured":false},{"id":7,"size":"large","type":"veggie","flavour":"Margherita","price":"69.99","featured":false},{"id":8,"size":"large","type":"veggie","flavour":"3 Cheese","price":"87.99","featured":false}];
+        //console.log(typeMeaty(pizzas));
+    </script>
+</head>
+
+<body>
+    <div class="container" x-data="pizzaCartWithAPIWidget">
+
+
+        <!--Navbar-->
+        <nav class="nav-container col-12">
+            <h2 class="col-9">Nandi's Pizzas</h2>
+            <div class="center" col-6>
+                <img src="logo.PNG" alt="logo" width="40%" style="margin: 1em;">
+            </div>
+            <div class="navbtn col-7">
+                <button class="clearbtn col-3" @click="window.location.reload();alert('Cart Cleared!')">Clear</button>
+                <button class="cartbtn col-3" @click="showCart =! showCart">Cart</button>
+            </div>
+        </nav>
+        <!--Cart-->
+        <div x-show="showCart" x-transition @click.outside="showCart = false">
+            <div class="cart col-6" x-transition>
+                <h3 class="center">Shopping Cart</h3>
+                <table class="center">
+                    <template x-for="pizza in cart.pizzas">
+                        <tr>
+                            <td x-text="pizza.flavour"></td>
+                            <td x-text="pizza.size"></td>
+                            <td><button class="incrementbtn"
+                                    @click="pizza.qty++; pizza.total=pizza.total*pizza.qty;">+</button></td>
+                            <td x-text="pizza.qty"></td>
+                            <td><button class="incrementbtn"
+                                    @click.stop.prevent="if(pizza.qty > 0) {pizza.qty--;pizza.total=pizza.total/(pizza.qty+1);}">-</button>
+                            </td>
+                            <td><span>R</span></td>
+                            <td x-text="pizza.total"></td>
+                            <td><button class="removebtn" @click='remove(pizza)'>X</button></td>
+                        </tr>
+                    </template>
+                </table>
+                <div>Total price: R<span x-text="cart.total"></span></div>
+                <!--Payment-->
+                <div>
+                    <div x-show="showMessage" @click.outside="showMessage = false">
+                        Payment Amount: <input type="number" x-model="paymentAmount">
+                        <button @click="pay(paymentAmount)">Pay</button>
+                        <div x-text="paymentMessage"></div>
+                    </div>
+                </div>
+                <div x-show="showCheckout">
+                    <button @click="showMessage=true; showCheckout=false;">Check Out</button>
+                </div>
+            </div>
+        </div>
+        <!--SlideShow-->
+        <div class="slideshow-container col-9 center">
+
+            <div class="mySlides fade">
+                <div class="numbertext">1 / 3</div>
+                <img src="img1.png" width="auto">
+            </div>
+
+            <div class="mySlides fade">
+                <div class="numbertext">2 / 3</div>
+                <img src="img2.png" width="auto">
+            </div>
+
+            <div class="mySlides fade">
+                <div class="numbertext">3 / 3</div>
+                <img src="img3.jpg" width="auto">
+            </div>
+
+        </div>
+        <br>
+
+        <div style="text-align:center">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+
+        <!--Pizza According-->
+        <div class="container">
+            <h1 class="center">Order Now</h1>
+            <form class="center col-6">
+                <div class="panel">Customer Name:<input type="text" name="username" id="username" x-model="username"
+                        class="user"></div>
+            </form>
+
+            <!--Featured-->
+            <h3 class="center panel col-3">Featured</h3>
+            <template x-for ="feat in featured">
+                <button class="accordion center col-12" @click="add(feat); alert('PIZZA ADDED TO CART')">
+                    <h3 x-text="feat.flavour"></h3>
+                    <div x-text="feat.size"></div>
+                    <div x-text="feat.price"></div>
+                </button>
+            </template>
+
+            <!--Meaty-->
+            <h3 class="center panel col-2">Meaty</h3>
+            <template x-for=" meat in meaty">
+                <button class="accordion center col-12" @click="add(meat); alert('PIZZA ADDED TO CART') ">
+                    <h3 x-text="meat.flavour"></h3>
+                    <div x-text="meat.size"></div>
+                    <div x-text="meat.price"></div>
+                </button>
+            </template>
+            <!--Chicken-->
+            <h3 class="center panel col-2">Chicken</h3>
+            <template x-for=" chick in chicken">
+                <button class="accordion center col-12" @click="add(chick); alert('PIZZA ADDED TO CART') ">
+                    <h3 x-text="chick.flavour"></h3>
+                    <div x-text="chick.size"></div>
+                    <div x-text="chick.price"></div>
+                </button>
+            </template>
+            <!--Veggie-->
+            <h3 class="center panel col-2">Veggie</h3>
+            <template x-for=" veg in veggie">
+                <button class="accordion center col-12" @click="add(veg); alert('PIZZA ADDED TO CART') ">
+                    <h3 x-text="veg.flavour"></h3>
+                    <div x-text="veg.size"></div>
+                    <div x-text="veg.price"></div>
+                </button>
+            </template>
+        </div>
+
+        <!--Footer-->
+        <div class="col-12 footer center">
+            <h2>Contact Details</h2>
+            <p>phone number: 081 599 7095
+                <br>Email: info@perfectpizza.com
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>
